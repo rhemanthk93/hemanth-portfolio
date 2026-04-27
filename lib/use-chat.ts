@@ -93,11 +93,14 @@ export function useChat() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const raw = window.sessionStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) setMessages(parsed);
       }
+      // Clean up the legacy localStorage key from the first deploy so users
+      // who chatted before this fix don't carry an orphaned transcript.
+      window.localStorage.removeItem(STORAGE_KEY);
     } catch {
       // ignore
     }
@@ -107,7 +110,7 @@ export function useChat() {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
     } catch {
       // ignore (quota etc.)
     }
@@ -223,7 +226,7 @@ export function useChat() {
   const reset = useCallback(() => {
     setMessages([]);
     try {
-      window.localStorage.removeItem(STORAGE_KEY);
+      window.sessionStorage.removeItem(STORAGE_KEY);
     } catch {
       // ignore
     }

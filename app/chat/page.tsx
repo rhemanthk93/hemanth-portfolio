@@ -34,7 +34,7 @@ function ChatPageInner() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="flex shrink-0 items-center justify-between border-b border-[var(--color-border)] px-4 py-3 md:px-8">
+      <header className="sticky top-0 z-20 flex shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3 md:px-8">
         <div className="flex items-center gap-4">
           <Wordmark />
           <Link
