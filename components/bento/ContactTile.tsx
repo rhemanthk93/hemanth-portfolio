@@ -55,7 +55,7 @@ export function ContactTile({ index = 0 }: { index?: number }) {
                 rel="noreferrer"
                 className="font-mono-label text-[var(--color-fg)] transition-colors hover:text-[var(--color-accent)]"
               >
-                {s.label} &nearr;
+                {s.label} <span aria-hidden>↗</span>
               </a>
             </span>
           ))}
