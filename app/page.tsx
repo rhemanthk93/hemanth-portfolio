@@ -2,7 +2,7 @@ import { Wordmark } from "@/components/chrome/Wordmark";
 import { StatusPill } from "@/components/chrome/StatusPill";
 import { Footer } from "@/components/chrome/Footer";
 import { HeroTile } from "@/components/bento/HeroTile";
-import { NowTile } from "@/components/bento/NowTile";
+import { WorkTile } from "@/components/bento/WorkTile";
 import { RoleTile } from "@/components/bento/RoleTile";
 import { GitHubTile } from "@/components/bento/GitHubTile";
 import { ProjectsTile } from "@/components/bento/ProjectsTile";
@@ -25,7 +25,7 @@ export default function Home() {
         >
           <HeroTile index={0} />
           <RoleTile index={1} />
-          <NowTile index={2} />
+          <WorkTile index={2} />
           <GitHubTile index={3} />
           <ProjectsTile index={4} />
           <ArticleTile index={5} />
