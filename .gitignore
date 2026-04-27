@@ -27,8 +27,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# env files
+# env files — match files starting with .env (.env.local, .env.prod) AND
+# files ending in .env (foo.env), to catch accidental copies
 .env*
+*.env
 !.env.example
 
 # vercel
