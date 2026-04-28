@@ -5,7 +5,7 @@ weight: 6
 ---
 
 - **Email**: rhemanthk93@gmail.com
-- **Phone**: +65 9769 3514
+- **WhatsApp**: https://wa.me/6597693514?text=Hi%20Hemanth%2C%20I%20found%20you%20via%20askhemanth
 - **LinkedIn**: https://www.linkedin.com/in/rhemanthkumar93/
 - **GitHub**: https://github.com/rhemanthk93
 - **Medium**: https://medium.com/@rhemanthk93
