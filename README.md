@@ -126,11 +126,19 @@ OUT OF SCOPE
 
 Asking "write me a poem about cats" or "what's 2+2" gets the canned redirect, not a general-purpose Claude response. This is enforced by Claude's instruction-following, not by code — so it's not airtight against a determined jailbreaker, but it works for normal traffic. It also prevents `web_search` from being abused as a free Google: the model only reaches for the tool when the question is *about Hemanth* and time-sensitive, per rule 2 above.
 
-**Rate limit (network-level).** [`app/api/chat/route.ts`](app/api/chat/route.ts) keeps a per-IP counter:
+**Rate limit (network-level).** [`app/api/chat/route.ts`](app/api/chat/route.ts) layers three sliding-window limiters via [`@upstash/ratelimit`](https://github.com/upstash/ratelimit-js) backed by Upstash Redis:
 
-- **10 requests / 60 seconds** per IP (`x-forwarded-for` first, falls back to `x-real-ip`).
-- Returns `429` with a `Retry-After` header when exceeded.
-- The state lives in an in-memory `Map`, so it's **per-Edge-instance, not global** — Vercel scales horizontally, and a determined attacker hitting different POPs can briefly exceed it. For higher-volume sites this should be swapped for Vercel KV / Upstash; for a personal portfolio it caps obvious abuse without a Redis dependency.
+| Limiter | Key | Window | Cap | Status on fail |
+|---|---|---|---|---|
+| Per-IP burst | `chat:<ip>` | 5 min | 5 | `429` |
+| Per-IP hourly | `chat:<ip>` | 1 hour | 20 | `429` |
+| Global daily | `global` | 24 hours | 500 | `503` |
+
+The IP comes from `x-forwarded-for` (first hop) → `x-real-ip` → `"unknown"`. Per-IP limits run **before** the global limiter so one abusive caller can't burn the daily quota for everyone. The global daily limit is the cost ceiling — it caps the worst-case Anthropic bill at roughly $6/day no matter how viral the page goes.
+
+If `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` aren't set (local dev, fork), the route falls back to per-instance in-memory counters with the same numbers — fine for development, **not adequate for production**, so always set the Upstash env vars in Vercel.
+
+When a limiter trips, the JSON body is `{ error: "rate_limit_per_ip" | "rate_limit_exceeded", message: "<human readable>" }` and the frontend renders it in-thread as a muted-italic system notice (same visual treatment as the `web_search` / `web_fetch` tool-status indicators), not as a toast or a thrown error.
 
 **Hard tool caps.** Even if a request makes it through rate limiting, `web_search`/`web_fetch` are bounded per response (3 + 2). The `max_tokens: 1024` cap means runaway generation costs are also bounded.
 
@@ -145,7 +153,7 @@ Asking "write me a poem about cats" or "what's 2+2" gets the canned redirect, no
 | Server-side query logging | None | Privacy-by-default; nothing to leak if scraped |
 | Per-session cost guard | None | Anthropic dashboard alerts handle the budget side |
 
-If usage patterns ever justify it, the natural next step is moving the rate limit to Upstash (global, persistent) and adding a cheap pre-flight classifier on suspicious-looking inputs before they hit the main model. Not worth the complexity yet.
+If usage patterns ever justify more, the natural next step is a cheap pre-flight classifier on suspicious-looking inputs before they hit the main model. Not worth the complexity yet.
 
 ### 6. Frontend wiring
 
@@ -207,9 +215,13 @@ The `predev` hook builds the KB before Next starts. To skip live-source fetches 
 
 ```bash
 ANTHROPIC_API_KEY=sk-ant-...        # required for /api/chat
+UPSTASH_REDIS_REST_URL=https://...  # required in production (rate limiting)
+UPSTASH_REDIS_REST_TOKEN=...        # required in production (rate limiting)
 MEDIUM_USERNAME=...                 # optional — without it, Medium feed is skipped
 GITHUB_USERNAME=...                 # optional — without it, GitHub feed is skipped
 ```
+
+Without the Upstash vars the rate limiter falls back to per-instance in-memory counters — fine locally, not safe in production.
 
 `.env.local` is loaded manually by the build script (Vercel injects env vars directly in production).
 

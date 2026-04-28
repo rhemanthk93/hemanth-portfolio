@@ -72,6 +72,18 @@ export function Message({ message, isLast, isStreaming }: Props) {
               <ToolStatus key={i} tool={b.tool} status={b.status} />
             );
           }
+          if (b.type === "notice") {
+            return (
+              <span
+                key={i}
+                role="status"
+                className="font-mono-label flex items-start gap-2 py-1 italic text-[var(--color-muted)]"
+              >
+                <span aria-hidden>↳</span>
+                <span>{b.text}</span>
+              </span>
+            );
+          }
           return null;
         })}
       </div>

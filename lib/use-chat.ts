@@ -135,13 +135,45 @@ export function useChat() {
         body: JSON.stringify({ messages: apiMessages }),
       });
       if (!res.ok || !res.body) {
+        // Try to read structured error first. The chat route returns
+        // { error: <code>, message: <human> } for 429 / 503; everything else
+        // gets a generic fallback.
         let serverMessage = `HTTP ${res.status}`;
         try {
-          const j = (await res.json()) as { error?: string };
-          if (j.error) serverMessage = j.error;
+          const j = (await res.json()) as { error?: string; message?: string };
+          if (j.message) serverMessage = j.message;
+          else if (j.error) serverMessage = j.error;
         } catch {
           // body wasn't JSON, keep the HTTP code
         }
+
+        if (res.status === 429 || res.status === 503) {
+          // Render the rate-limit message as an in-thread notice (mono italic
+          // muted) instead of throwing — looks like a tool-status indicator.
+          const fallback =
+            res.status === 503
+              ? "Today's traffic limit reached — try tomorrow."
+              : "You've hit the per-visitor limit — please wait an hour.";
+          setMessages((prev) => {
+            const i = prev.findIndex((m) => m.id === asstId);
+            if (i < 0) return prev;
+            const next = [...prev];
+            next[i] = {
+              id: asstId,
+              role: "assistant",
+              blocks: [
+                {
+                  type: "notice",
+                  tone: "rate-limit",
+                  text: serverMessage || fallback,
+                },
+              ],
+            };
+            return next;
+          });
+          return;
+        }
+
         throw new Error(serverMessage);
       }
 
