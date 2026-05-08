@@ -65,6 +65,10 @@ Total full-time experience: ~8 years (since 2017).
     marketplace.
   - SNPDrug3D variant-to-structure mapping platform with A*STAR's
     Bioinformatics Institute.
+  - Multi-agent architecture for a major Singapore tourist attraction:
+    designing an agentic system that uses Snowflake Cortex Search as the
+    retrieval backbone, integrated into an orchestrated multi-agent
+    pipeline for intelligent information retrieval and visitor engagement.
 - **Projects:** see `data/projects/ngee-ann-poly-databricks.md`,
   `data/projects/natural-capital-monetisation.md`,
   `data/projects/snpdrug3d.md`.
